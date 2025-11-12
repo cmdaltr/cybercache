@@ -1,8 +1,19 @@
 # CyberCache Management Scripts
 
-This directory contains convenience scripts for managing the CyberCache application.
+This directory contains scripts for managing the CyberCache application.
 
-## 📋 Available Scripts
+## 🚀 Quick Start
+
+From the project root directory:
+
+```bash
+./setup   # First time only - installs dependencies
+./start   # Start the application
+```
+
+## 📋 Management Scripts
+
+After starting the application, you can use these scripts:
 
 ### `start.sh`
 Starts both the backend API server and frontend development server.

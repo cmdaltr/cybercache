@@ -1,0 +1,3 @@
+#!/bin/bash
+# CyberCache Start - Run this to start the application
+./scripts/start.sh

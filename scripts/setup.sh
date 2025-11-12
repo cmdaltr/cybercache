@@ -39,35 +39,38 @@ echo "Installing Dependencies"
 echo "=================================="
 echo ""
 
+# Get the project root directory (parent of scripts/)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Install Python dependencies
 echo "Installing Python dependencies..."
-cd backend
+cd "$PROJECT_DIR/backend"
 if pip install -r requirements.txt; then
     echo -e "${GREEN}✓ Python dependencies installed${NC}"
 else
     echo -e "${RED}❌ Failed to install Python dependencies${NC}"
     exit 1
 fi
-cd ..
 
 echo ""
 
 # Install Node.js dependencies
 echo "Installing Node.js dependencies..."
-cd frontend
+cd "$PROJECT_DIR/frontend"
 if npm install; then
     echo -e "${GREEN}✓ Node.js dependencies installed${NC}"
 else
     echo -e "${RED}❌ Failed to install Node.js dependencies${NC}"
     exit 1
 fi
-cd ..
 
 echo ""
 
 # Create necessary directories
 echo "Creating directories..."
-mkdir -p content uploads
+cd "$PROJECT_DIR"
+mkdir -p content uploads logs
 echo -e "${GREEN}✓ Directories created${NC}"
 
 echo ""
@@ -75,21 +78,10 @@ echo "=================================="
 echo "Setup Complete!"
 echo "=================================="
 echo ""
-echo "To start the application, use the management scripts:"
+echo "To start CyberCache, simply run:"
 echo ""
-echo -e "${YELLOW}Quick Start:${NC}"
-echo "  ./scripts/start.sh"
+echo -e "${GREEN}  ./start${NC}"
 echo ""
-echo -e "${YELLOW}Other Commands:${NC}"
-echo "  ./scripts/status.sh   # Check if running"
-echo "  ./scripts/logs.sh     # View live logs"
-echo "  ./scripts/stop.sh     # Stop servers"
-echo "  ./scripts/restart.sh  # Restart servers"
-echo ""
-echo -e "${YELLOW}Or manually in separate terminals:${NC}"
-echo "  Terminal 1: cd backend && source venv/bin/activate && python app.py"
-echo "  Terminal 2: cd frontend && npm run dev"
-echo ""
-echo "Then open your browser to: http://localhost:3000"
+echo "Then open your browser to: ${YELLOW}http://localhost:3000${NC}"
 echo ""
 echo -e "${GREEN}Happy organizing! 🛡️${NC}"

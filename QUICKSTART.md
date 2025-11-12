@@ -1,55 +1,45 @@
 # CyberCache - Quick Start Guide
 
-## 🚀 Getting Started in 3 Steps
+## 🚀 Getting Started in 2 Simple Steps
 
 ### 1. Install Dependencies (First Time Only)
 
-Run the setup script:
 ```bash
-./setup.sh
+./setup
 ```
 
-Or manually:
-```bash
-# Backend
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+This will automatically:
+- Install Python dependencies (Flask, SQLite, etc.)
+- Install Node.js dependencies (React, Vite, etc.)
+- Create necessary directories
 
-# Frontend
-cd ../frontend
-npm install
+### 2. Start the Application
+
+```bash
+./start
 ```
 
-### 2. Start the Servers
-
-You need TWO terminal windows:
-
-**Terminal 1 - Backend:**
-```bash
-./run_backend.sh
-```
-Or manually:
-```bash
-cd backend
-source venv/bin/activate
-python app.py
-```
-
-**Terminal 2 - Frontend:**
-```bash
-./run_frontend.sh
-```
-Or manually:
-```bash
-cd frontend
-npm run dev
-```
+This will automatically:
+- Start the backend API server (port 5000)
+- Start the frontend dev server (port 3000)
+- Run both in the background with automatic logging
 
 ### 3. Open Your Browser
 
 Navigate to: **http://localhost:3000**
+
+That's it! 🎉
+
+## 🛠️ Managing the Application
+
+After starting with `./start`, you can manage the application using scripts in the `scripts/` directory:
+
+```bash
+./scripts/status.sh   # Check if servers are running
+./scripts/logs.sh     # View live logs
+./scripts/restart.sh  # Restart both servers
+./scripts/stop.sh     # Stop both servers
+```
 
 ## ✨ What's New in v2.0
 

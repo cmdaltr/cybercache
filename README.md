@@ -53,69 +53,28 @@ cybercache/
 - Node.js 18 or higher
 - npm or yarn
 
-### Installation
+### Two Simple Commands
 
-1. **Install Backend Dependencies**
+**1. First Time Setup (install dependencies):**
 ```bash
-cd backend
-pip install -r requirements.txt
+./setup
 ```
 
-2. **Install Frontend Dependencies**
+**2. Start the Application:**
 ```bash
-cd frontend
-npm install
+./start
 ```
 
-### Running the Application
+That's it! Open your browser to **http://localhost:3000**
 
-#### Quick Start (Recommended)
+### What Happens Automatically
 
-Use the provided scripts to manage both servers with a single command:
-
-```bash
-# Start both servers
-./scripts/start.sh
-
-# Check status
-./scripts/status.sh
-
-# View logs
-./scripts/logs.sh
-
-# Restart both servers
-./scripts/restart.sh
-
-# Stop both servers
-./scripts/stop.sh
-```
-
-The web app will be available at `http://localhost:3000` and the API at `http://localhost:5000`.
-
-#### Manual Start (Alternative)
-
-If you prefer to run servers manually in separate terminals:
-
-**Terminal 1 - Backend Server:**
-```bash
-cd backend
-source venv/bin/activate
-python app.py
-```
-
-**Terminal 2 - Frontend Development Server:**
-```bash
-cd frontend
-npm run dev
-```
-
-### First Time Setup
-
-When you first start the application:
-1. The backend will automatically create the SQLite database
-2. Default categories will be populated
-3. The file watcher will scan existing files in watched directories
-4. Any files found will be automatically imported
+When you run `./start`, the application will:
+1. Start both backend (port 5000) and frontend (port 3000) servers
+2. Run them in the background with automatic logging
+3. Create the SQLite database if it doesn't exist
+4. Populate default categories
+5. Watch for new files in the `content/` directory
 
 ## 📖 Usage
 
