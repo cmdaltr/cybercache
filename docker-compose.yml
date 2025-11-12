@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  cybercache:
+    build: .
+    container_name: cybercache
+    ports:
+      - "5000:5000"
+      - "3000:3000"
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Mount content directory for file watching
+      - ./content:/app/content
+      # Mount uploads directory
+      - ./uploads:/app/uploads
+    environment:
+      # Optional: Add AI API keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Database path
+      - DATABASE_PATH=/app/data/cybercache.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  data:
+    driver: local
