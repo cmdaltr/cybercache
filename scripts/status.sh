@@ -21,8 +21,8 @@ if [ -f "$PROJECT_DIR/.cybercache.pid" ]; then
     if ps -p $BACKEND_PID > /dev/null 2>&1; then
         echo "   ✅ Running (PID: $BACKEND_PID)"
         # Check if responding
-        if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
-            echo "   ✅ Responding at http://localhost:5000"
+        if curl -s http://localhost:22244/api/health > /dev/null 2>&1; then
+            echo "   ✅ Responding at http://localhost:22244"
         else
             echo "   ⚠️  Process running but not responding"
         fi
@@ -34,7 +34,7 @@ if [ -f "$PROJECT_DIR/.cybercache.pid" ]; then
     echo "🎨 Frontend:"
     if ps -p $FRONTEND_PID > /dev/null 2>&1; then
         echo "   ✅ Running (PID: $FRONTEND_PID)"
-        echo "   📍 http://localhost:3000"
+        echo "   📍 http://localhost:22243"
     else
         echo "   ❌ Not running (stale PID: $FRONTEND_PID)"
     fi

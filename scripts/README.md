@@ -7,6 +7,7 @@ This directory contains scripts for managing the CyberCache application.
 From the project root directory:
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate   # Optional
 ./setup   # First time only - installs dependencies
 ./start   # Start the application
 ```
@@ -24,14 +25,14 @@ Starts both the backend API server and frontend development server.
 
 **What it does:**
 - Activates the Python virtual environment
-- Starts the Flask backend API on port 5000
-- Starts the Vite frontend dev server on port 3000
+- Starts the Flask backend API on port 22244
+- Starts the Vite frontend dev server on port 22243
 - Creates PID files for process management
 - Logs output to `logs/backend.log` and `logs/frontend.log`
 
 **Output:**
-- Backend API: `http://localhost:5000`
-- Frontend App: `http://localhost:3000`
+- Backend API: [http://localhost:22244](http://localhost:22244)
+- Frontend App: [http://localhost:22243](http://localhost:22243)
 
 ---
 
@@ -84,11 +85,11 @@ Shows the current status of both servers and recent logs.
 
 📦 Backend:
    ✅ Running (PID: 12345)
-   ✅ Responding at http://localhost:5000
+   ✅ Responding at [http://localhost:22244](http://localhost:22244)
 
 🎨 Frontend:
    ✅ Running (PID: 12346)
-   📍 http://localhost:3000
+   📍 [http://localhost:22243](http://localhost:22243)
 ```
 
 ---
@@ -149,8 +150,8 @@ If you get port conflicts, stop any running instances:
 ```bash
 ./scripts/stop.sh
 # Or manually kill processes on the ports
-lsof -ti:5000 | xargs kill
-lsof -ti:3000 | xargs kill
+lsof -ti:22244 | xargs kill
+lsof -ti:22243 | xargs kill
 ```
 
 ### "Process not found"

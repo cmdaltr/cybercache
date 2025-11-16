@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Search, Upload, Database, TrendingUp } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Shield, Search, Upload, Database, TrendingUp, Eye, EyeOff } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { statsAPI, resourcesAPI } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 
@@ -9,9 +9,19 @@ function Home() {
   const [stats, setStats] = useState(null)
   const [recentResources, setRecentResources] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showFeatures, setShowFeatures] = useState(true)
 
   useEffect(() => {
     loadData()
+  }, [])
+
+  // Auto-hide features after 20 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFeatures(false)
+    }, 20000) // 20 seconds
+
+    return () => clearTimeout(timer)
   }, [])
 
   const loadData = async () => {
@@ -107,30 +117,65 @@ function Home() {
         </div>
       </motion.div>
 
-      {/* Features Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {features.map((feature, index) => {
-          const Icon = feature.icon
-          return (
+      {/* Features Grid with Toggle */}
+      <div className="space-y-4">
+        {/* Toggle Button */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowFeatures(!showFeatures)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            {showFeatures ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                Hide Features
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                Show Features
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Features Grid */}
+        <AnimatePresence>
+          {showFeatures && (
             <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card text-center"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
             >
-              <div className="flex justify-center mb-4">
-                <Icon className="h-12 w-12 text-primary-500" />
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+                {features.map((feature, index) => {
+                  const Icon = feature.icon
+                  return (
+                    <motion.div
+                      key={feature.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="card text-center"
+                    >
+                      <div className="flex justify-center mb-4">
+                        <Icon className="h-12 w-12 text-primary-500" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2 text-white">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        {feature.description}
+                      </p>
+                    </motion.div>
+                  )
+                })}
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-white">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 text-sm">
-                {feature.description}
-              </p>
             </motion.div>
-          )
-        })}
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Recent Resources */}

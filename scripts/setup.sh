@@ -46,12 +46,22 @@ PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 # Install Python dependencies
 echo "Installing Python dependencies..."
 cd "$PROJECT_DIR/backend"
-if pip install -r requirements.txt; then
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate virtual environment and install dependencies
+source venv/bin/activate
+if python3 -m pip install -r requirements.txt; then
     echo -e "${GREEN}✓ Python dependencies installed${NC}"
 else
     echo -e "${RED}❌ Failed to install Python dependencies${NC}"
     exit 1
 fi
+deactivate
 
 echo ""
 

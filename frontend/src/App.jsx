@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Browse from './pages/Browse'
 import Search from './pages/Search'
 import Upload from './pages/Upload'
+import Export from './pages/Export'
 import ResourceDetail from './pages/ResourceDetail'
 import { categoriesAPI } from './api/client'
 
@@ -44,6 +45,7 @@ function App() {
           <Route path="/browse/:category" element={<Browse categories={categories} />} />
           <Route path="/search" element={<Search />} />
           <Route path="/upload" element={<Upload categories={categories} />} />
+          <Route path="/export" element={<Export />} />
           <Route path="/resource/:id" element={<ResourceDetail />} />
         </Routes>
       </Layout>

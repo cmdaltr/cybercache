@@ -456,13 +456,13 @@ if __name__ == '__main__':
         print("\n" + "="*60)
         print("🗄️  CyberCache API Server")
         print("="*60)
-        print(f"📍 Running on: http://localhost:5000")
+        print(f"📍 Running on: http://localhost:22244")
         print(f"📁 Watching directories:")
         for d in WATCHED_DIRS:
             print(f"   - {d}")
         print("="*60 + "\n")
 
-        app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+        app.run(debug=True, host='0.0.0.0', port=22244, use_reloader=False)
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
         observer.stop()

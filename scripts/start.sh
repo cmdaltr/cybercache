@@ -26,18 +26,18 @@ cd "$PROJECT_DIR/backend"
 
 # Activate virtual environment and start backend in background
 source venv/bin/activate
-nohup python app.py > "$PROJECT_DIR/logs/backend.log" 2>&1 &
+nohup python3 app.py > "$PROJECT_DIR/logs/backend.log" 2>&1 &
 BACKEND_PID=$!
 echo $BACKEND_PID > "$PROJECT_DIR/.backend.pid"
 echo "   ✓ Backend started (PID: $BACKEND_PID)"
-echo "   📍 API running at: http://localhost:5000"
+echo "   📍 API running at: http://localhost:22244"
 
 # Wait for backend to start
 echo "   ⏳ Waiting for backend to initialize..."
 sleep 3
 
 # Check if backend is responding
-if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
+if curl -s http://localhost:22244/api/health > /dev/null 2>&1; then
     echo "   ✓ Backend is healthy"
 else
     echo "   ⚠️  Backend may not be responding yet (this is sometimes normal)"
@@ -52,7 +52,7 @@ nohup npm run dev > "$PROJECT_DIR/logs/frontend.log" 2>&1 &
 FRONTEND_PID=$!
 echo $FRONTEND_PID > "$PROJECT_DIR/.frontend.pid"
 echo "   ✓ Frontend started (PID: $FRONTEND_PID)"
-echo "   📍 Web app running at: http://localhost:3000"
+echo "   📍 Web app running at: http://localhost:22243"
 
 # Save combined PID file
 echo "$BACKEND_PID,$FRONTEND_PID" > "$PROJECT_DIR/.cybercache.pid"
@@ -62,7 +62,7 @@ echo "========================================"
 echo "✅ CyberCache is now running!"
 echo "========================================"
 echo ""
-echo "📱 Open your browser to: http://localhost:3000"
+echo "📱 Open your browser to: http://localhost:22243"
 echo ""
 echo "📋 Useful commands:"
 echo "   View logs:    tail -f logs/backend.log logs/frontend.log"

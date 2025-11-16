@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Upload, Menu, X, Shield } from 'lucide-react'
+import { Home, Search, Upload, Menu, X, Shield, Download } from 'lucide-react'
 import { useState } from 'react'
 
 function Layout({ children, categories }) {
@@ -11,6 +11,7 @@ function Layout({ children, categories }) {
     { name: 'Browse', href: '/browse', icon: Shield },
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Upload', href: '/upload', icon: Upload },
+    { name: 'Export', href: '/export', icon: Download },
   ]
 
   const isActive = (path) => {
