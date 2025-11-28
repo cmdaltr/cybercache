@@ -1,15 +1,21 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Upload, Menu, X, Shield, Download } from 'lucide-react'
+import { Home, Search, Upload, Menu, X, Shield, Download, Book } from 'lucide-react'
 import { useState } from 'react'
 
 function Layout({ children, categories }) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const Logo = ({ className }) => (
+    <div className="relative inline-block">
+      <Shield className={className} />
+      <Book className="absolute top-[48%] left-[50.5%] transform -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 text-primary-500 group-hover:text-primary-400 transition-colors" />
+    </div>
+  )
+
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Browse', href: '/browse', icon: Shield },
-    { name: 'Search', href: '/search', icon: Search },
+    { name: 'Browse', href: '/browse', icon: Search },
     { name: 'Upload', href: '/upload', icon: Upload },
     { name: 'Export', href: '/export', icon: Download },
   ]
@@ -27,7 +33,7 @@ function Layout({ children, categories }) {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 group">
-              <Shield className="h-8 w-8 text-primary-500 group-hover:text-primary-400 transition-colors" />
+              <Logo className="h-8 w-8 text-primary-500 group-hover:text-primary-400 transition-colors" />
               <span className="text-xl font-bold text-white group-hover:text-primary-400 transition-colors">
                 CyberCache
               </span>

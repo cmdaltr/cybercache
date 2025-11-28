@@ -343,6 +343,12 @@ def get_categories():
     categories = db.get_categories()
     return jsonify(categories)
 
+@app.route('/api/tags', methods=['GET'])
+def get_tags():
+    """Get all unique tags"""
+    tags = db.get_all_tags()
+    return jsonify(tags)
+
 # ============================================================================
 # Bookmarks Export API
 # ============================================================================
@@ -350,7 +356,7 @@ def get_categories():
 @app.route('/api/bookmarks/export/<browser>', methods=['GET'])
 def export_bookmarks_endpoint(browser):
     """Export bookmarks for specified browser"""
-    supported_browsers = ['chrome', 'firefox', 'safari', 'edge']
+    supported_browsers = ['chrome', 'firefox', 'safari', 'edge', 'opera']
 
     if browser.lower() not in supported_browsers:
         return jsonify({'error': f'Unsupported browser. Choose from: {", ".join(supported_browsers)}'}), 400

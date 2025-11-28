@@ -165,7 +165,7 @@ Change ports:
 Reset the database:
 ```bash
 cd backend
-rm oscybershop.db
+rm cybercache.db
 python app.py  # Will recreate database
 ```
 

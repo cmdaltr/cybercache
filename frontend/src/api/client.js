@@ -45,6 +45,11 @@ export const categoriesAPI = {
   getAll: () => apiClient.get('/api/categories'),
 };
 
+// Tags API
+export const tagsAPI = {
+  getAll: () => apiClient.get('/api/tags'),
+};
+
 // Stats API
 export const statsAPI = {
   get: () => apiClient.get('/api/stats'),

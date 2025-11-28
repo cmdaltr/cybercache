@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Search, Upload, Database, TrendingUp, Eye, EyeOff } from 'lucide-react'
+import { Shield, Search, Upload, Database, TrendingUp, Eye, EyeOff, Book } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { statsAPI, resourcesAPI } from '../api/client'
+import { statsAPI, resourcesAPI, tagsAPI } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 
 function Home() {
   const [stats, setStats] = useState(null)
   const [recentResources, setRecentResources] = useState([])
+  const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
   const [showFeatures, setShowFeatures] = useState(true)
+
+  const HeroLogo = () => (
+    <div className="relative inline-block">
+      <Shield className="h-36 w-36 text-primary-500" />
+      <Book className="absolute top-[48%] left-[50.5%] transform -translate-x-1/2 -translate-y-1/2 h-12 w-12 text-primary-500" />
+    </div>
+  )
 
   useEffect(() => {
     loadData()
@@ -26,12 +34,14 @@ function Home() {
 
   const loadData = async () => {
     try {
-      const [statsRes, resourcesRes] = await Promise.all([
+      const [statsRes, resourcesRes, tagsRes] = await Promise.all([
         statsAPI.get(),
-        resourcesAPI.getAll({ limit: 6 })
+        resourcesAPI.getAll({ limit: 10 }),
+        tagsAPI.getAll()
       ])
       setStats(statsRes.data)
       setRecentResources(resourcesRes.data)
+      setTags(tagsRes.data)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
@@ -80,38 +90,42 @@ function Home() {
         className="text-center space-y-6"
       >
         <div className="flex justify-center">
-          <Shield className="h-20 w-20 text-primary-500" />
+          <HeroLogo />
         </div>
-        <h1 className="text-5xl font-bold text-white">
+        <h1 className="text-8xl font-bold text-white">
           CyberCache
         </h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
           Your personal, locally-hosted cybersecurity resource hub.
           Automatically organize, search, and manage your security resources.
         </p>
 
         {/* Quick Stats */}
         {stats && (
-          <div className="flex justify-center gap-8 mt-8">
+          <div className="flex justify-center gap-11 mt-11">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary-500">{stats.total}</div>
-              <div className="text-sm text-gray-400">Total Resources</div>
+              <div className="text-5xl font-bold text-primary-500">{stats.total}</div>
+              <div className="text-base text-gray-400 mt-2">Total Resources</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary-500">
+              <div className="text-5xl font-bold text-primary-500">
                 {Object.keys(stats.by_category || {}).length}
               </div>
-              <div className="text-sm text-gray-400">Categories</div>
+              <div className="text-base text-gray-400 mt-2">Categories</div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-primary-500">{tags.length}</div>
+              <div className="text-base text-gray-400 mt-2">Tags</div>
             </div>
           </div>
         )}
 
         {/* CTA Buttons */}
-        <div className="flex justify-center gap-4 mt-8">
-          <Link to="/browse" className="btn-primary px-8 py-3 text-lg">
+        <div className="flex justify-center gap-5 mt-11">
+          <Link to="/browse" className="btn-primary px-11 py-4 text-xl">
             Browse Resources
           </Link>
-          <Link to="/upload" className="btn-secondary px-8 py-3 text-lg">
+          <Link to="/upload" className="btn-secondary px-11 py-4 text-xl">
             Upload New
           </Link>
         </div>
@@ -190,7 +204,7 @@ function Home() {
               View all →
             </Link>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {recentResources.map((resource) => (
               <ResourceCard key={resource.id} resource={resource} />
             ))}

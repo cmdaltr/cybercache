@@ -118,7 +118,7 @@ class BookmarkExporter:
                     "children": [{
                         "date_added": str(timestamp),
                         "date_modified": str(timestamp),
-                        "guid": self._generate_guid("oscybershop"),
+                        "guid": self._generate_guid("cybercache"),
                         "id": "1",
                         "name": "CyberCache",
                         "type": "folder",
@@ -204,7 +204,7 @@ class BookmarkExporter:
             "children": [{
                 "children": folders,
                 "dateAdded": timestamp,
-                "guid": self._generate_guid("oscybershop"),
+                "guid": self._generate_guid("cybercache"),
                 "id": 1,
                 "index": 0,
                 "lastModified": timestamp,

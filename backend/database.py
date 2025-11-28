@@ -296,6 +296,25 @@ class Database:
 
         return [dict(row) for row in categories]
 
+    def get_all_tags(self):
+        """Get all unique tags from resources"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT DISTINCT tags FROM resources WHERE tags IS NOT NULL AND tags != ""')
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Extract and flatten tags
+        all_tags = set()
+        for row in rows:
+            if row['tags']:
+                # Split comma-separated tags and clean them
+                tags = [tag.strip() for tag in row['tags'].split(',')]
+                all_tags.update(tags)
+
+        # Return sorted list of unique tags
+        return sorted([tag for tag in all_tags if tag])
+
     def get_stats(self):
         """Get database statistics"""
         conn = self.get_connection()

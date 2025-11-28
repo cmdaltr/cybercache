@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Browse from './pages/Browse'
-import Search from './pages/Search'
 import Upload from './pages/Upload'
 import Export from './pages/Export'
 import ResourceDetail from './pages/ResourceDetail'
@@ -43,7 +42,6 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse categories={categories} />} />
           <Route path="/browse/:category" element={<Browse categories={categories} />} />
-          <Route path="/search" element={<Search />} />
           <Route path="/upload" element={<Upload categories={categories} />} />
           <Route path="/export" element={<Export />} />
           <Route path="/resource/:id" element={<ResourceDetail />} />

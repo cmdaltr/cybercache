@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { Download, FileText, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
+import chromeIcon from '../../images/chrome.png'
+import firefoxIcon from '../../images/firefox.png'
+import safariIcon from '../../images/safari.png'
+import edgeIcon from '../../images/edge.png'
+import operaIcon from '../../images/opera.png'
 
 function Export() {
   const [selectedBrowser, setSelectedBrowser] = useState(null)
   const [format, setFormat] = useState('html')
 
   const browsers = [
-    { id: 'chrome', name: 'Google Chrome', icon: '🌐' },
-    { id: 'firefox', name: 'Mozilla Firefox', icon: '🦊' },
-    { id: 'safari', name: 'Safari', icon: '🧭' },
-    { id: 'edge', name: 'Microsoft Edge', icon: '🌊' }
+    { id: 'chrome', name: 'Chrome', icon: chromeIcon },
+    { id: 'firefox', name: 'Firefox', icon: firefoxIcon },
+    { id: 'safari', name: 'Safari', icon: safariIcon },
+    { id: 'edge', name: 'Edge', icon: edgeIcon },
+    { id: 'opera', name: 'Opera', icon: operaIcon }
   ]
 
   const handleExport = (browserId) => {
@@ -30,7 +36,7 @@ function Export() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -46,18 +52,14 @@ function Export() {
         </p>
       </motion.div>
 
-      {/* Format Selection */}
+      {/* Export Options */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
         className="card"
       >
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary-500" />
-          Export Format
-        </h2>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap items-center">
           <button
             onClick={() => setFormat('html')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
@@ -78,26 +80,7 @@ function Export() {
           >
             JSON
           </button>
-        </div>
-        <p className="text-sm text-gray-400 mt-3">
-          {format === 'html'
-            ? 'Standard Netscape bookmark format compatible with all browsers'
-            : 'JSON format for programmatic use or custom import scripts'}
-        </p>
-      </motion.div>
-
-      {/* Browser Selection */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="card"
-      >
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary-500" />
-          Select Browser
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
+          <div className="h-10 w-px bg-gray-600 mx-6"></div>
           {browsers.map((browser) => (
             <motion.button
               key={browser.id}
@@ -105,29 +88,25 @@ function Export() {
               disabled={selectedBrowser === browser.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`p-6 rounded-lg border-2 transition-all text-left ${
+              className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
                 selectedBrowser === browser.id
                   ? 'border-green-500 bg-green-500/10'
                   : 'border-gray-700 hover:border-primary-500 bg-gray-800'
               }`}
             >
-              <div className="flex items-center gap-4">
-                <div className="text-4xl">{browser.icon}</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    {browser.name}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {selectedBrowser === browser.id
-                      ? '✓ Downloaded!'
-                      : `Export for ${browser.name}`}
-                  </p>
-                </div>
-                <Download className="h-6 w-6 text-primary-500" />
-              </div>
+              <img src={browser.icon} alt={browser.name} className="w-6 h-6" />
+              <span className="font-medium text-white">{browser.name}</span>
+              {selectedBrowser === browser.id && (
+                <span className="text-green-400">✓</span>
+              )}
             </motion.button>
           ))}
         </div>
+        <p className="text-sm text-gray-400 mt-4">
+          {format === 'html'
+            ? 'Standard Netscape bookmark format compatible with all browsers'
+            : 'JSON format for programmatic use or custom import scripts'}
+        </p>
       </motion.div>
 
       {/* Instructions */}
@@ -162,6 +141,14 @@ function Export() {
             <ol className="list-decimal list-inside space-y-1 text-sm">
               <li>File → Import From → Bookmarks HTML File</li>
               <li>Select the downloaded HTML file</li>
+            </ol>
+          </div>
+          <div>
+            <h3 className="font-semibold text-primary-400 mb-2">Opera:</h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm">
+              <li>Click ☰ (menu) → Bookmarks → Import bookmarks and settings</li>
+              <li>Select "Bookmarks HTML File" from dropdown</li>
+              <li>Click "Choose File" and select the downloaded HTML file</li>
             </ol>
           </div>
         </div>

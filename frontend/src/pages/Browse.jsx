@@ -1,25 +1,65 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Filter } from 'lucide-react'
-import { resourcesAPI } from '../api/client'
+import { Filter, Search as SearchIcon, Tag } from 'lucide-react'
+import { resourcesAPI, tagsAPI } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
+import SearchBar from '../components/SearchBar'
 
 function Browse({ categories }) {
   const { category } = useParams()
   const [resources, setResources] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState(category || null)
+  const [selectedTag, setSelectedTag] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [tags, setTags] = useState([])
+
+  useEffect(() => {
+    loadTags()
+  }, [])
 
   useEffect(() => {
     loadResources()
-  }, [selectedCategory])
+  }, [selectedCategory, selectedTag, searchQuery])
+
+  const loadTags = async () => {
+    try {
+      const response = await tagsAPI.getAll()
+      setTags(response.data)
+    } catch (error) {
+      console.error('Error loading tags:', error)
+    }
+  }
 
   const loadResources = async () => {
     setLoading(true)
     try {
-      const response = await resourcesAPI.getAll({
-        category: selectedCategory
-      })
+      let response
+      if (searchQuery) {
+        // If there's a search query, use search API
+        response = await resourcesAPI.search(searchQuery)
+        // Filter by category if one is selected
+        if (selectedCategory) {
+          response.data = response.data.filter(r => r.category === selectedCategory)
+        }
+        // Filter by tag if one is selected
+        if (selectedTag) {
+          response.data = response.data.filter(r =>
+            r.tags && r.tags.split(',').map(t => t.trim()).includes(selectedTag)
+          )
+        }
+      } else {
+        // Otherwise, get all resources
+        response = await resourcesAPI.getAll({
+          category: selectedCategory
+        })
+        // Filter by tag if one is selected
+        if (selectedTag) {
+          response.data = response.data.filter(r =>
+            r.tags && r.tags.split(',').map(t => t.trim()).includes(selectedTag)
+          )
+        }
+      }
       setResources(response.data)
     } catch (error) {
       console.error('Error loading resources:', error)
@@ -32,6 +72,14 @@ function Browse({ categories }) {
     setSelectedCategory(cat === selectedCategory ? null : cat)
   }
 
+  const handleTagChange = (tag) => {
+    setSelectedTag(tag === selectedTag ? null : tag)
+  }
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -40,13 +88,24 @@ function Browse({ categories }) {
           Browse Resources
         </h1>
         <p className="text-gray-400">
-          {selectedCategory
-            ? `Showing resources in ${selectedCategory}`
+          {searchQuery
+            ? `Search results for "${searchQuery}"${selectedCategory ? ` in ${selectedCategory}` : ''}${selectedTag ? ` tagged with ${selectedTag}` : ''}`
+            : selectedCategory || selectedTag
+            ? `Showing resources${selectedCategory ? ` in ${selectedCategory}` : ''}${selectedTag ? ` tagged with ${selectedTag}` : ''}`
             : 'Showing all resources'}
         </p>
       </div>
 
-      {/* Category Filter */}
+      {/* Search Bar */}
+      <div className="card">
+        <div className="flex items-center gap-2 mb-4">
+          <SearchIcon className="h-5 w-5 text-primary-500" />
+          <h2 className="text-lg font-semibold text-white">Search Resources</h2>
+        </div>
+        <SearchBar onSearch={handleSearch} placeholder="Search by title, description, or tags..." />
+      </div>
+
+      {/* Category & Tag Filter */}
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-primary-500" />
@@ -76,6 +135,19 @@ function Browse({ categories }) {
               {cat.name}
             </button>
           ))}
+          {tags.length > 0 && tags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => handleTagChange(tag)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                selectedTag === tag
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-purple-900/40 text-purple-300 hover:bg-purple-800/60'
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -95,10 +167,10 @@ function Browse({ categories }) {
         <>
           <div className="flex justify-between items-center">
             <p className="text-gray-400">
-              {resources.length} resource{resources.length !== 1 ? 's' : ''}
+              {resources.length} resource{resources.length !== 1 ? 's' : ''} • {tags.length} tag{tags.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {resources.map((resource) => (
               <ResourceCard key={resource.id} resource={resource} />
             ))}

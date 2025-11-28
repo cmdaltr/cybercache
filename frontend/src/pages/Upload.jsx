@@ -93,7 +93,7 @@ function Upload({ categories }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
         <div className="flex justify-center mb-4">
@@ -186,96 +186,102 @@ function Upload({ categories }) {
           </div>
         )}
 
-        {/* URL Input */}
-        {uploadType === 'link' && (
-          <div>
+        {/* URL / Title / Category Row */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* URL Input */}
+          {uploadType === 'link' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                URL *
+              </label>
+              <input
+                type="url"
+                name="url"
+                value={formData.url}
+                onChange={handleInputChange}
+                placeholder="https://example.com"
+                className="input-field w-full"
+                required={uploadType === 'link'}
+              />
+            </div>
+          )}
+
+          {/* Title */}
+          <div className={uploadType === 'file' ? 'col-span-2' : ''}>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              URL *
+              Title {uploadType === 'link' && '*'}
             </label>
             <input
-              type="url"
-              name="url"
-              value={formData.url}
+              type="text"
+              name="title"
+              value={formData.title}
               onChange={handleInputChange}
-              placeholder="https://example.com"
+              placeholder="Resource title"
               className="input-field w-full"
               required={uploadType === 'link'}
             />
+            {uploadType === 'file' && (
+              <p className="text-gray-500 text-xs mt-1">
+                Leave empty to auto-generate from filename
+              </p>
+            )}
           </div>
-        )}
 
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Title {uploadType === 'link' && '*'}
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="Resource title"
-            className="input-field w-full"
-            required={uploadType === 'link'}
-          />
-          {uploadType === 'file' && (
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Category
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleInputChange}
+              className="input-field w-full h-[42px]"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Description / Tags Row */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Brief description of the resource"
+              rows="3"
+              className="input-field w-full resize-none"
+            />
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tags
+            </label>
+            <textarea
+              name="tags"
+              value={formData.tags}
+              onChange={handleInputChange}
+              placeholder="security, penetration-testing, tools (comma-separated)"
+              rows="3"
+              className="input-field w-full resize-none"
+            />
             <p className="text-gray-500 text-xs mt-1">
-              Leave empty to auto-generate from filename
+              Separate tags with commas
             </p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Brief description of the resource"
-            rows="3"
-            className="input-field w-full resize-none"
-          />
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Category
-          </label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-            className="input-field w-full"
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Tags
-          </label>
-          <input
-            type="text"
-            name="tags"
-            value={formData.tags}
-            onChange={handleInputChange}
-            placeholder="security, penetration-testing, tools (comma-separated)"
-            className="input-field w-full"
-          />
-          <p className="text-gray-500 text-xs mt-1">
-            Separate tags with commas
-          </p>
+          </div>
         </div>
 
         {/* Submit Button */}
