@@ -274,6 +274,119 @@ CONFIDENCE: high"""
             url=url
         )
 
+    def fetch_url_metadata(self, url: str) -> Dict:
+        """Fetch metadata (title, description) from a URL"""
+        import requests
+        from urllib.parse import urlparse
+
+        metadata = {
+            'url': url,
+            'title': '',
+            'description': '',
+            'domain': ''
+        }
+
+        try:
+            # Extract domain for fallback title
+            parsed = urlparse(url)
+            metadata['domain'] = parsed.netloc
+
+            # Fetch the page with timeout
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            response.raise_for_status()
+
+            # Parse HTML
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Extract title
+            if soup.title and soup.title.string:
+                metadata['title'] = soup.title.string.strip()
+
+            # Extract description from meta tags
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            if meta_desc and meta_desc.get('content'):
+                metadata['description'] = meta_desc['content'].strip()
+
+            # Try og:description as fallback
+            if not metadata['description']:
+                og_desc = soup.find('meta', attrs={'property': 'og:description'})
+                if og_desc and og_desc.get('content'):
+                    metadata['description'] = og_desc['content'].strip()
+
+            # Try og:title as fallback for title
+            if not metadata['title']:
+                og_title = soup.find('meta', attrs={'property': 'og:title'})
+                if og_title and og_title.get('content'):
+                    metadata['title'] = og_title['content'].strip()
+
+            # Fallback title - generate from URL path
+            if not metadata['title']:
+                metadata['title'] = self._title_from_url(url)
+
+        except Exception as e:
+            print(f"Failed to fetch metadata for {url}: {e}")
+            # Generate readable title from URL
+            if not metadata['title']:
+                metadata['title'] = self._title_from_url(url)
+
+        return metadata
+
+    def _title_from_url(self, url: str) -> str:
+        """Generate a readable title from a URL"""
+        from urllib.parse import urlparse, unquote
+
+        try:
+            parsed = urlparse(url)
+            # Get the path and remove leading/trailing slashes
+            path = unquote(parsed.path).strip('/')
+
+            if path:
+                # Get the last meaningful segment of the path
+                segments = [s for s in path.split('/') if s]
+                if segments:
+                    # Use the last segment, clean it up
+                    title = segments[-1]
+                    # Remove common file extensions
+                    for ext in ['.html', '.htm', '.php', '.aspx', '.jsp']:
+                        if title.lower().endswith(ext):
+                            title = title[:-len(ext)]
+                    # Replace dashes/underscores with spaces and capitalize
+                    title = title.replace('-', ' ').replace('_', ' ')
+                    title = ' '.join(word.capitalize() for word in title.split())
+                    if title:
+                        return title
+
+            # Fallback to domain name
+            return parsed.netloc
+        except:
+            return url
+
+    def process_url_for_import(self, url: str) -> Dict:
+        """Fetch metadata from URL and classify it"""
+        # First fetch metadata
+        metadata = self.fetch_url_metadata(url)
+
+        # Then classify based on the metadata
+        classification = self.classify(
+            title=metadata['title'],
+            description=metadata['description'],
+            url=url
+        )
+
+        return {
+            'url': url,
+            'title': metadata['title'],
+            'description': metadata['description'],
+            'category': classification.get('category', ''),
+            'tags': classification.get('tags', []),
+            'confidence': classification.get('confidence', 'low'),
+            'classifier': classification.get('classifier', 'keywords')
+        }
+
 
 # Singleton instance
 _classifier = None

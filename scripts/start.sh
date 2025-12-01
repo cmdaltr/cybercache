@@ -1,75 +1,45 @@
 #!/bin/bash
 
-# CyberCache Startup Script
-# Starts both backend and frontend servers
+# CyberCache Start Script
+cd "$(dirname "$0")/.."
 
-set -e
+echo "Starting CyberCache..."
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
-
-echo "========================================"
-echo "🚀 Starting CyberCache"
-echo "========================================"
-
-# Check if already running
-if [ -f "$PROJECT_DIR/.cybercache.pid" ]; then
-    echo "⚠️  CyberCache appears to be already running"
-    echo "   If this is incorrect, run: ./scripts/stop.sh"
-    exit 1
-fi
-
-# Start Backend
-echo ""
-echo "📦 Starting Backend API..."
-cd "$PROJECT_DIR/backend"
-
-# Activate virtual environment and start backend in background
+# Start backend
+echo "Starting backend server..."
+cd backend
 source venv/bin/activate
-nohup python3 app.py > "$PROJECT_DIR/logs/backend.log" 2>&1 &
+python app.py &
 BACKEND_PID=$!
-echo $BACKEND_PID > "$PROJECT_DIR/.backend.pid"
-echo "   ✓ Backend started (PID: $BACKEND_PID)"
-echo "   📍 API running at: http://localhost:22244"
+cd ..
 
-# Wait for backend to start
-echo "   ⏳ Waiting for backend to initialize..."
-sleep 3
+# Wait for backend to be ready
+echo "Waiting for backend to be ready..."
+for i in {1..30}; do
+    if curl -s http://localhost:22244/api/health > /dev/null 2>&1; then
+        echo "Backend is ready!"
+        break
+    fi
+    sleep 1
+done
 
-# Check if backend is responding
-if curl -s http://localhost:22244/api/health > /dev/null 2>&1; then
-    echo "   ✓ Backend is healthy"
-else
-    echo "   ⚠️  Backend may not be responding yet (this is sometimes normal)"
-fi
-
-# Start Frontend
-echo ""
-echo "🎨 Starting Frontend Dev Server..."
-cd "$PROJECT_DIR/frontend"
-
-nohup npm run dev > "$PROJECT_DIR/logs/frontend.log" 2>&1 &
+# Start frontend
+echo "Starting frontend..."
+cd frontend
+npm run dev &
 FRONTEND_PID=$!
-echo $FRONTEND_PID > "$PROJECT_DIR/.frontend.pid"
-echo "   ✓ Frontend started (PID: $FRONTEND_PID)"
-echo "   📍 Web app running at: http://localhost:22243"
-
-# Save combined PID file
-echo "$BACKEND_PID,$FRONTEND_PID" > "$PROJECT_DIR/.cybercache.pid"
+cd ..
 
 echo ""
-echo "========================================"
-echo "✅ CyberCache is now running!"
-echo "========================================"
+echo "=========================================="
+echo "CyberCache is running!"
+echo "=========================================="
+echo "Frontend: http://localhost:5173"
+echo "Backend:  http://localhost:22244"
+echo "=========================================="
 echo ""
-echo "📱 Open your browser to: http://localhost:22243"
-echo ""
-echo "📋 Useful commands:"
-echo "   View logs:    tail -f logs/backend.log logs/frontend.log"
-echo "   Stop servers: ./scripts/stop.sh"
-echo "   Restart:      ./scripts/restart.sh"
-echo ""
-echo "💡 Logs are saved to:"
-echo "   Backend:  logs/backend.log"
-echo "   Frontend: logs/frontend.log"
-echo ""
+echo "Press Ctrl+C to stop all services"
+
+# Wait for interrupt
+trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" SIGINT SIGTERM
+wait

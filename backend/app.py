@@ -174,6 +174,133 @@ def delete_resource(resource_id):
 # Upload API
 # ============================================================================
 
+@app.route('/api/extract/link', methods=['POST'])
+def extract_link_metadata():
+    """Extract metadata from a URL for preview before saving"""
+    data = request.json
+
+    if not data or 'url' not in data:
+        return jsonify({'error': 'No URL provided'}), 400
+
+    url = data['url']
+
+    try:
+        # Validate URL
+        validated_url = InputValidator.validate_url(url)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+    # Check if URL already exists
+    existing = db.find_by_url(url)
+    is_duplicate = existing is not None
+
+    # Extract metadata and classify
+    classifier = get_classifier()
+    result = classifier.process_url_for_import(validated_url)
+
+    # Convert tags list to comma-separated string
+    tags = result.get('tags', [])
+    if isinstance(tags, list):
+        tags = ', '.join(tags)
+
+    return jsonify({
+        'url': validated_url,
+        'title': result.get('title', ''),
+        'description': result.get('description', ''),
+        'category': result.get('category', ''),
+        'tags': tags,
+        'confidence': result.get('confidence', 'low'),
+        'classifier': result.get('classifier', 'keywords'),
+        'is_duplicate': is_duplicate,
+        'missing_fields': [
+            field for field, value in [
+                ('title', result.get('title')),
+                ('category', result.get('category')),
+            ] if not value
+        ]
+    })
+
+@app.route('/api/extract/file', methods=['POST'])
+def extract_file_metadata():
+    """Extract metadata from an uploaded file for preview before saving"""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    try:
+        InputValidator.validate_file_extension(file.filename)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'File type not allowed'}), 400
+
+    # Sanitize filename
+    try:
+        filename = InputValidator.sanitize_filename(file.filename)
+    except ValueError as e:
+        return jsonify({'error': f'Invalid filename: {str(e)}'}), 400
+
+    file_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+    # Generate title from filename
+    title = Path(filename).stem.replace('_', ' ').replace('-', ' ')
+    title = ' '.join(word.capitalize() for word in title.split())
+
+    # Read file for classification (limit size for preview)
+    file_data = file.read()
+    file_size = len(file_data)
+
+    # Classify based on file content
+    classifier = get_classifier()
+
+    # Save temporarily for PDF text extraction if needed
+    temp_path = None
+    classification = {'category': '', 'tags': [], 'confidence': 'low', 'classifier': 'keywords'}
+
+    if file_type == 'application/pdf':
+        temp_path = UPLOAD_FOLDER / f"temp_{filename}"
+        try:
+            with open(temp_path, 'wb') as f:
+                f.write(file_data)
+            classification = classifier.classify_file(str(temp_path), title, '')
+        finally:
+            if temp_path and temp_path.exists():
+                temp_path.unlink()
+    else:
+        # For non-PDF files, classify based on filename/title
+        classification = classifier.classify(title=title, filename=filename)
+
+    # Convert tags list to comma-separated string
+    tags = classification.get('tags', [])
+    if isinstance(tags, list):
+        tags = ', '.join(tags)
+
+    # Seek back to beginning so file can be read again if needed
+    file.seek(0)
+
+    return jsonify({
+        'filename': filename,
+        'title': title,
+        'description': '',  # Can't extract description from most files
+        'category': classification.get('category', ''),
+        'tags': tags,
+        'file_type': file_type,
+        'file_size': file_size,
+        'confidence': classification.get('confidence', 'low'),
+        'classifier': classification.get('classifier', 'keywords'),
+        'missing_fields': [
+            field for field, value in [
+                ('title', title),
+                ('category', classification.get('category')),
+            ] if not value
+        ]
+    })
+
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """Upload a file with AI classification, database storage, and security validation"""
@@ -300,6 +427,399 @@ def upload_file():
         'tags': tags,
         'classified_by': classifier_used
     }), 201
+
+# ============================================================================
+# Bulk Import API
+# ============================================================================
+
+@app.route('/api/upload/batch', methods=['POST'])
+def upload_batch_files():
+    """Upload multiple files at once (for directory upload)"""
+    if 'files[]' not in request.files:
+        return jsonify({'error': 'No files provided'}), 400
+
+    files = request.files.getlist('files[]')
+
+    if not files or len(files) == 0:
+        return jsonify({'error': 'No files selected'}), 400
+
+    auto_classify = request.form.get('auto_classify', 'true').lower() == 'true'
+
+    results = {
+        'processed': [],
+        'failed': [],
+        'duplicates': []
+    }
+
+    classifier = get_classifier()
+
+    for file in files:
+        if file.filename == '':
+            continue
+
+        # Validate file extension
+        try:
+            InputValidator.validate_file_extension(file.filename)
+        except ValueError as e:
+            results['failed'].append({
+                'filename': file.filename,
+                'reason': str(e)
+            })
+            continue
+
+        if not allowed_file(file.filename):
+            results['failed'].append({
+                'filename': file.filename,
+                'reason': 'File type not allowed'
+            })
+            continue
+
+        try:
+            # Sanitize filename
+            filename = InputValidator.sanitize_filename(file.filename)
+            file_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+            # Read file data
+            file_data = file.read()
+            file_size = len(file_data)
+
+            # Check size limit
+            MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+            if file_size > MAX_FILE_SIZE:
+                results['failed'].append({
+                    'filename': filename,
+                    'reason': f'File too large (max {MAX_FILE_SIZE / 1024 / 1024}MB)'
+                })
+                continue
+
+            # Generate title from filename
+            title = Path(filename).stem.replace('_', ' ').replace('-', ' ')
+            title = ' '.join(word.capitalize() for word in title.split())
+
+            # Classification
+            category = ''
+            tags = ''
+            classifier_used = None
+            classification_confidence = None
+
+            if auto_classify:
+                temp_path = None
+                if file_type == 'application/pdf':
+                    temp_path = UPLOAD_FOLDER / f"temp_{filename}"
+                    with open(temp_path, 'wb') as f:
+                        f.write(file_data)
+
+                try:
+                    if temp_path:
+                        classification = classifier.classify_file(str(temp_path), title, '')
+                    else:
+                        classification = classifier.classify(title, '', '', filename)
+
+                    category = classification.get('category', '')
+                    tags = classification.get('tags', [])
+                    if isinstance(tags, list):
+                        tags = ', '.join(tags)
+                    classifier_used = classification.get('classifier', 'keywords')
+                    classification_confidence = classification.get('confidence', 'medium')
+                except Exception as e:
+                    print(f"Classification failed for {filename}: {e}")
+                finally:
+                    if temp_path and temp_path.exists():
+                        temp_path.unlink()
+
+            # Store file in database
+            resource_id = db.add_resource(
+                title=title,
+                description='',
+                file_path=filename,
+                file_data=file_data,
+                file_type=file_type,
+                file_size=file_size,
+                category=category,
+                tags=tags,
+                resource_type='file',
+                classifier_used=classifier_used,
+                classification_confidence=classification_confidence
+            )
+
+            if resource_id:
+                results['processed'].append({
+                    'id': resource_id,
+                    'filename': filename,
+                    'title': title,
+                    'category': category,
+                    'tags': tags
+                })
+            else:
+                results['duplicates'].append({
+                    'filename': filename,
+                    'reason': 'File already exists (duplicate hash)'
+                })
+
+        except Exception as e:
+            print(f"Error processing {file.filename}: {e}")
+            results['failed'].append({
+                'filename': file.filename,
+                'reason': str(e)
+            })
+
+    return jsonify({
+        'message': f"Processed {len(results['processed'])} files",
+        'total_submitted': len(files),
+        'successful': len(results['processed']),
+        'duplicates': len(results['duplicates']),
+        'failed': len(results['failed']),
+        'results': results
+    })
+
+
+@app.route('/api/extract/batch', methods=['POST'])
+def extract_batch_metadata():
+    """Extract metadata from multiple files for preview before saving"""
+    if 'files[]' not in request.files:
+        return jsonify({'error': 'No files provided'}), 400
+
+    files = request.files.getlist('files[]')
+
+    if not files or len(files) == 0:
+        return jsonify({'error': 'No files selected'}), 400
+
+    classifier = get_classifier()
+    previews = []
+
+    for file in files:
+        if file.filename == '':
+            continue
+
+        # Validate file extension
+        try:
+            InputValidator.validate_file_extension(file.filename)
+        except ValueError as e:
+            previews.append({
+                'filename': file.filename,
+                'error': str(e)
+            })
+            continue
+
+        if not allowed_file(file.filename):
+            previews.append({
+                'filename': file.filename,
+                'error': 'File type not allowed'
+            })
+            continue
+
+        try:
+            filename = InputValidator.sanitize_filename(file.filename)
+            file_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+            # Generate title from filename
+            title = Path(filename).stem.replace('_', ' ').replace('-', ' ')
+            title = ' '.join(word.capitalize() for word in title.split())
+
+            # Read file for classification
+            file_data = file.read()
+            file_size = len(file_data)
+
+            # Classify
+            temp_path = None
+            classification = {'category': '', 'tags': [], 'confidence': 'low', 'classifier': 'keywords'}
+
+            if file_type == 'application/pdf':
+                temp_path = UPLOAD_FOLDER / f"temp_{filename}"
+                try:
+                    with open(temp_path, 'wb') as f:
+                        f.write(file_data)
+                    classification = classifier.classify_file(str(temp_path), title, '')
+                finally:
+                    if temp_path and temp_path.exists():
+                        temp_path.unlink()
+            else:
+                classification = classifier.classify(title=title, filename=filename)
+
+            tags = classification.get('tags', [])
+            if isinstance(tags, list):
+                tags = ', '.join(tags)
+
+            # Reset file pointer
+            file.seek(0)
+
+            previews.append({
+                'filename': filename,
+                'title': title,
+                'description': '',
+                'category': classification.get('category', ''),
+                'tags': tags,
+                'file_type': file_type,
+                'file_size': file_size,
+                'confidence': classification.get('confidence', 'low'),
+                'classifier': classification.get('classifier', 'keywords')
+            })
+
+        except Exception as e:
+            previews.append({
+                'filename': file.filename,
+                'error': str(e)
+            })
+
+    return jsonify({
+        'total': len(previews),
+        'previews': previews
+    })
+
+
+@app.route('/api/import/links', methods=['POST'])
+def bulk_import_links():
+    """
+    Import multiple links from a text file or list.
+    Automatically fetches titles, descriptions, categories, and tags.
+    """
+    data = request.json
+
+    if not data or 'links' not in data:
+        return jsonify({'error': 'No links provided'}), 400
+
+    links = data['links']
+    if isinstance(links, str):
+        # Parse text content - one URL per line
+        links = [line.strip() for line in links.split('\n') if line.strip()]
+
+    # Filter valid URLs
+    valid_links = []
+    for link in links:
+        link = link.strip()
+        if link and (link.startswith('http://') or link.startswith('https://')):
+            valid_links.append(link)
+
+    if not valid_links:
+        return jsonify({'error': 'No valid URLs found'}), 400
+
+    # Process each link
+    classifier = get_classifier()
+    results = {
+        'processed': [],
+        'failed': [],
+        'duplicates': []
+    }
+
+    for url in valid_links:
+        try:
+            # Check if URL already exists
+            existing = db.find_by_url(url)
+            if existing:
+                results['duplicates'].append({'url': url, 'reason': 'Already exists'})
+                continue
+
+            # Process URL - fetch metadata and classify
+            processed = classifier.process_url_for_import(url)
+
+            # Convert tags list to string
+            tags = processed.get('tags', [])
+            if isinstance(tags, list):
+                tags = ', '.join(tags)
+
+            # Validate inputs
+            try:
+                title = InputValidator.validate_title(processed.get('title', url))
+                description = InputValidator.validate_description(processed.get('description', ''))
+                category = InputValidator.validate_category(processed.get('category', ''))
+                tags = InputValidator.validate_tags(tags)
+                validated_url = InputValidator.validate_url(url)
+            except ValueError as e:
+                results['failed'].append({'url': url, 'reason': str(e)})
+                continue
+
+            # Add to database
+            resource_id = db.add_resource(
+                title=title,
+                description=description,
+                category=category,
+                tags=tags,
+                url=validated_url,
+                resource_type='link',
+                classifier_used=processed.get('classifier'),
+                classification_confidence=processed.get('confidence')
+            )
+
+            if resource_id:
+                results['processed'].append({
+                    'id': resource_id,
+                    'url': url,
+                    'title': title,
+                    'category': category,
+                    'tags': tags
+                })
+            else:
+                results['duplicates'].append({'url': url, 'reason': 'Could not add (possible duplicate)'})
+
+        except Exception as e:
+            print(f"Error processing {url}: {e}")
+            results['failed'].append({'url': url, 'reason': str(e)})
+
+    return jsonify({
+        'message': f"Processed {len(results['processed'])} links",
+        'total_submitted': len(valid_links),
+        'successful': len(results['processed']),
+        'duplicates': len(results['duplicates']),
+        'failed': len(results['failed']),
+        'results': results
+    })
+
+@app.route('/api/import/links/preview', methods=['POST'])
+def preview_bulk_import():
+    """
+    Preview what will be imported without actually saving.
+    Returns extracted metadata and classifications for each URL.
+    """
+    data = request.json
+
+    if not data or 'links' not in data:
+        return jsonify({'error': 'No links provided'}), 400
+
+    links = data['links']
+    if isinstance(links, str):
+        links = [line.strip() for line in links.split('\n') if line.strip()]
+
+    valid_links = []
+    for link in links:
+        link = link.strip()
+        if link and (link.startswith('http://') or link.startswith('https://')):
+            valid_links.append(link)
+
+    if not valid_links:
+        return jsonify({'error': 'No valid URLs found'}), 400
+
+    classifier = get_classifier()
+    previews = []
+
+    for url in valid_links:
+        try:
+            # Check if already exists
+            existing = db.find_by_url(url)
+            is_duplicate = existing is not None
+
+            # Process URL
+            processed = classifier.process_url_for_import(url)
+
+            previews.append({
+                'url': url,
+                'title': processed.get('title', ''),
+                'description': processed.get('description', ''),
+                'category': processed.get('category', ''),
+                'tags': processed.get('tags', []),
+                'confidence': processed.get('confidence', 'low'),
+                'is_duplicate': is_duplicate
+            })
+        except Exception as e:
+            previews.append({
+                'url': url,
+                'error': str(e),
+                'is_duplicate': False
+            })
+
+    return jsonify({
+        'total': len(valid_links),
+        'previews': previews
+    })
 
 # ============================================================================
 # Search API

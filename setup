@@ -1,3 +1,0 @@
-#!/bin/bash
-# CyberCache Setup - Run this once to install dependencies
-./scripts/setup.sh

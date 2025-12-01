@@ -106,10 +106,20 @@ function Layout({ children, categories }) {
 
       {/* Footer */}
       <footer className="bg-gray-800 border-t border-gray-700 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-gray-400 text-sm">
-            <p>CyberCache - Your local cybersecurity resource hub</p>
-            <p className="mt-2">Built with React, Flask, and SQLite</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center text-gray-400 text-sm space-y-4">
+            <p>CyberCache - Your local cybersecurity resource hub | Built with React, Flask, and SQLite</p>
+            <div className="border-t border-gray-700 pt-4 mt-4">
+              <p className="text-gray-500 italic">
+                With great power, comes great responsibility; this material has been collated to encourage learning and development, and not to be leveraged for unethical and/or illegal behaviour.
+              </p>
+              <p className="text-gray-500 mt-2">
+                By visiting any of these sites, you are doing so at your own risk.
+              </p>
+              <p className="text-gray-500 mt-4">
+                I would like to thank all of the authors, instructors, publishers, developers (and others) - both individuals and teams - for the content curated on this site. I must stress that none of the content referenced/linked on this site is my own.
+              </p>
+            </div>
           </div>
         </div>
       </footer>

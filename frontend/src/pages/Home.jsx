@@ -14,8 +14,8 @@ function Home() {
 
   const HeroLogo = () => (
     <div className="relative inline-block">
-      <Shield className="h-36 w-36 text-primary-500" />
-      <Book className="absolute top-[48%] left-[50.5%] transform -translate-x-1/2 -translate-y-1/2 h-12 w-12 text-primary-500" />
+      <Shield className="h-[216px] w-[216px] text-primary-500" />
+      <Book className="absolute top-[48%] left-[50.5%] transform -translate-x-1/2 -translate-y-1/2 h-[72px] w-[72px] text-primary-500" />
     </div>
   )
 
@@ -95,7 +95,7 @@ function Home() {
         <h1 className="text-8xl font-bold text-white">
           CyberCache
         </h1>
-        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+        <p className="text-2xl text-gray-400 max-w-3xl mx-auto">
           Your personal, locally-hosted cybersecurity resource hub.
           Automatically organize, search, and manage your security resources.
         </p>

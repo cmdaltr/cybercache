@@ -248,6 +248,15 @@ class Database:
 
         return [dict(row) for row in results]
 
+    def find_by_url(self, url):
+        """Find a resource by exact URL match"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM resources WHERE url = ? LIMIT 1', (url,))
+        result = cursor.fetchone()
+        conn.close()
+        return dict(result) if result else None
+
     def update_resource(self, resource_id, **kwargs):
         """Update a resource"""
         conn = self.get_connection()

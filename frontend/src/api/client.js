@@ -38,6 +38,44 @@ export const uploadAPI = {
       },
     });
   },
+  uploadBatch: (files, autoClassify = true) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files[]', file);
+    });
+    formData.append('auto_classify', autoClassify.toString());
+
+    return apiClient.post('/api/upload/batch', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+// Extract/Preview API
+export const extractAPI = {
+  fromLink: (url) => apiClient.post('/api/extract/link', { url }),
+  fromFile: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/api/extract/file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  fromBatch: (files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files[]', file);
+    });
+    return apiClient.post('/api/extract/batch', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 // Categories API
@@ -53,6 +91,12 @@ export const tagsAPI = {
 // Stats API
 export const statsAPI = {
   get: () => apiClient.get('/api/stats'),
+};
+
+// Bulk Import API
+export const importAPI = {
+  bulkLinks: (links) => apiClient.post('/api/import/links', { links }),
+  previewLinks: (links) => apiClient.post('/api/import/links/preview', { links }),
 };
 
 // Health check
