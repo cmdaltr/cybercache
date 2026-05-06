@@ -8,14 +8,14 @@ WORKDIR /app/frontend
 # Copy frontend package files
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev, needed for vite build)
+RUN npm install
 
 # Copy frontend source
 COPY frontend/ ./
 
 # Build frontend for production
-RUN npm run build
+RUN node node_modules/vite/bin/vite.js build
 
 # Stage 2: Production image
 FROM python:3.13-slim
@@ -48,11 +48,11 @@ ENV FLASK_APP=backend/app.py
 ENV PYTHONUNBUFFERED=1
 
 # Expose port
-EXPOSE 5000
+EXPOSE 22244
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/api/health')" || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:22244/api/health')" || exit 1
 
 # Run the application
 CMD ["python", "backend/app.py"]

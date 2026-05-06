@@ -5,8 +5,7 @@ services:
     build: .
     container_name: cybercache
     ports:
-      - "5000:5000"
-      - "3000:3000"
+      - "22244:22244"
     volumes:
       # Persist database
       - ./data:/app/data
@@ -22,7 +21,7 @@ services:
       - DATABASE_PATH=/app/data/cybercache.db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:22244/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -953,6 +953,22 @@ def serve_file_by_id(resource_id):
     )
 
 # ============================================================================
+# Frontend static file serving
+# ============================================================================
+
+_FRONTEND_DIST = Path(__file__).parent.parent / 'frontend' / 'dist'
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if _FRONTEND_DIST.exists():
+        target = _FRONTEND_DIST / path if path else None
+        if target and target.is_file():
+            return send_from_directory(str(_FRONTEND_DIST), path)
+        return send_from_directory(str(_FRONTEND_DIST), 'index.html')
+    return jsonify({"message": "CyberCache API running", "docs": "/api/health"}), 200
+
+# ============================================================================
 # Initialization
 # ============================================================================
 

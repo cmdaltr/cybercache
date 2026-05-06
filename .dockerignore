@@ -5,6 +5,8 @@ __pycache__/
 *.so
 .Python
 venv/
+**/venv/
+**/.venv/
 ENV/
 *.egg-info/
 .eggs/
@@ -44,6 +46,12 @@ Thumbs.db
 # Temp
 .temp/
 *.log
+
+# Large local directories not needed in image
+content/
+uploads/
+data/
+logs/
 
 # Build
 frontend/dist/
