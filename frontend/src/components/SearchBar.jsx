@@ -25,7 +25,10 @@ function SearchBar({ onSearch, placeholder = "Search resources...", autoFocus = 
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+          setQuery(e.target.value)
+          if (!e.target.value) onSearch('')
+        }}
           placeholder={placeholder}
           autoFocus={autoFocus}
           className="input-field w-full pl-12 pr-12 py-3 text-lg"

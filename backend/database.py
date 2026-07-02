@@ -226,14 +226,20 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # FTS5 MATCH query
+        # Convert each term to a prefix query so "hack" matches "hacker", "hacking", etc.
+        fts_query = ' '.join(term + '*' for term in query.split() if term)
+
+        # FTS5 MATCH query — exclude file_data BLOB to keep results JSON-serializable
         search_query = '''
-            SELECT r.*, rank
+            SELECT r.id, r.title, r.description, r.file_path, r.file_type, r.file_size,
+                   r.file_hash, r.category, r.tags, r.url, r.resource_type, r.thumbnail_path,
+                   r.classifier_used, r.classification_confidence, r.created_at, r.updated_at,
+                   rank
             FROM resources r
             JOIN resources_fts ON r.id = resources_fts.rowid
             WHERE resources_fts MATCH ?
         '''
-        params = [query]
+        params = [fts_query]
 
         if category:
             search_query += ' AND r.category = ?'

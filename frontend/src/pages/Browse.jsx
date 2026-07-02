@@ -63,6 +63,7 @@ function Browse({ categories }) {
       setResources(response.data)
     } catch (error) {
       console.error('Error loading resources:', error)
+      setResources([])
     } finally {
       setLoading(false)
     }
