@@ -21,7 +21,9 @@ services:
       - DATABASE_PATH=/app/data/cybercache.db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:22244/api/health"]
+      # The image has Python but not curl: with curl this failed every time and the container
+      # was always "unhealthy"
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:22244/api/health', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3
